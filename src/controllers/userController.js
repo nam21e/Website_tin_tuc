@@ -4,7 +4,8 @@ const userController = {
   async getAllUsers(req, res, next) {
     try {
       const data = await userModel.getAll();
-      res.status(200).json({
+
+      return res.status(200).json({
         success: true,
         data,
       });
@@ -18,7 +19,7 @@ const userController = {
       const { id } = req.params;
       const data = await userModel.getById(id);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data,
       });
@@ -31,15 +32,23 @@ const userController = {
     try {
       const { name, email, avatar_url, role } = req.body;
 
+      if (!name || !email) {
+        return res.status(400).json({
+          success: false,
+          message: "Thiếu name hoặc email",
+        });
+      }
+
       const data = await userModel.create({
         name,
         email,
-        avatar_url: avatar_url || null,
-        role: role || "user",
+        avatar_url,
+        role,
       });
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
+        message: "Tạo user thành công",
         data,
       });
     } catch (error) {
@@ -53,14 +62,15 @@ const userController = {
       const { name, email, avatar_url, role } = req.body;
 
       const data = await userModel.update(id, {
-        ...(name !== undefined && { name }),
-        ...(email !== undefined && { email }),
-        ...(avatar_url !== undefined && { avatar_url }),
-        ...(role !== undefined && { role }),
+        name,
+        email,
+        avatar_url,
+        role,
       });
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
+        message: "Cập nhật user thành công",
         data,
       });
     } catch (error) {
@@ -74,7 +84,7 @@ const userController = {
 
       const data = await userModel.delete(id);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: "Xóa user thành công",
         data,

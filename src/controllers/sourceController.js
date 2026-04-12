@@ -1,14 +1,10 @@
 const sourceModel = require("../models/sourceModel");
-const slugify = require("../utils/slugify");
 
 const sourceController = {
   async getAllSources(req, res, next) {
     try {
       const data = await sourceModel.getAll();
-      res.status(200).json({
-        success: true,
-        data,
-      });
+      return res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);
     }
@@ -16,13 +12,8 @@ const sourceController = {
 
   async getSourceById(req, res, next) {
     try {
-      const { id } = req.params;
-      const data = await sourceModel.getById(id);
-
-      res.status(200).json({
-        success: true,
-        data,
-      });
+      const data = await sourceModel.getById(req.params.id);
+      return res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);
     }
@@ -30,20 +21,19 @@ const sourceController = {
 
   async createSource(req, res, next) {
     try {
-      const { name, website, logo_url, description } = req.body;
+      const { name, website, logo } = req.body;
 
-      const payload = {
-        name,
-        slug: slugify(name),
-        website: website || null,
-        logo_url: logo_url || null,
-        description: description || null,
-      };
+      if (!name) {
+        return res.status(400).json({
+          success: false,
+          message: "Thiếu name",
+        });
+      }
 
-      const data = await sourceModel.create(payload);
-
-      res.status(201).json({
+      const data = await sourceModel.create({ name, website, logo });
+      return res.status(201).json({
         success: true,
+        message: "Tạo source thành công",
         data,
       });
     } catch (error) {
@@ -53,20 +43,10 @@ const sourceController = {
 
   async updateSource(req, res, next) {
     try {
-      const { id } = req.params;
-      const { name, website, logo_url, description } = req.body;
-
-      const payload = {
-        ...(name && { name, slug: slugify(name) }),
-        ...(website !== undefined && { website }),
-        ...(logo_url !== undefined && { logo_url }),
-        ...(description !== undefined && { description }),
-      };
-
-      const data = await sourceModel.update(id, payload);
-
-      res.status(200).json({
+      const data = await sourceModel.update(req.params.id, req.body);
+      return res.status(200).json({
         success: true,
+        message: "Cập nhật source thành công",
         data,
       });
     } catch (error) {
@@ -76,12 +56,10 @@ const sourceController = {
 
   async deleteSource(req, res, next) {
     try {
-      const { id } = req.params;
-      const data = await sourceModel.delete(id);
-
-      res.status(200).json({
+      const data = await sourceModel.delete(req.params.id);
+      return res.status(200).json({
         success: true,
-        message: "Xóa nguồn tin thành công",
+        message: "Xóa source thành công",
         data,
       });
     } catch (error) {

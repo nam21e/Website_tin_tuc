@@ -1,47 +1,36 @@
-const bcrypt = require("bcryptjs");
-const userModel = require("../models/userModel");
-const { signToken } = require("../utils/jwt");
+const supabase = require("../config/supabase");
 
 const authController = {
   async register(req, res, next) {
     try {
-      const { name, email, password, role } = req.body;
+      const { name, email, avatar_url, role } = req.body;
 
-      const existingUser = await userModel.getByEmail(email).catch(() => null);
-      if (existingUser) {
+      if (!name || !email) {
         return res.status(400).json({
           success: false,
-          message: "Email đã tồn tại",
+          message: "Thiếu name hoặc email",
         });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const { data, error } = await supabase
+        .from("users")
+        .insert([
+          {
+            name,
+            email,
+            avatar_url: avatar_url || null,
+            role: role || "user",
+          },
+        ])
+        .select()
+        .single();
 
-      const user = await userModel.createWithPassword({
-        name,
-        email,
-        password: hashedPassword,
-        role: role || "user",
-      });
+      if (error) throw new Error(error.message);
 
-      const token = signToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      });
-
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: "Đăng ký thành công",
-        data: {
-          token,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-          },
-        },
+        data,
       });
     } catch (error) {
       next(error);
@@ -50,54 +39,27 @@ const authController = {
 
   async login(req, res, next) {
     try {
-      const { email, password } = req.body;
+      const { email } = req.body;
 
-      const user = await userModel.getByEmail(email).catch(() => null);
-      if (!user) {
+      if (!email) {
         return res.status(400).json({
           success: false,
-          message: "Email hoặc mật khẩu không đúng",
+          message: "Thiếu email",
         });
       }
 
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(400).json({
-          success: false,
-          message: "Email hoặc mật khẩu không đúng",
-        });
-      }
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", email)
+        .single();
 
-      const token = signToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      });
+      if (error) throw new Error("Email không tồn tại");
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: "Đăng nhập thành công",
-        data: {
-          token,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            avatar_url: user.avatar_url,
-          },
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  async me(req, res, next) {
-    try {
-      res.status(200).json({
-        success: true,
-        data: req.user,
+        data,
       });
     } catch (error) {
       next(error);

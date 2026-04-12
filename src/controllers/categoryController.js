@@ -1,14 +1,10 @@
 const categoryModel = require("../models/categoryModel");
-const slugify = require("../utils/slugify");
 
 const categoryController = {
   async getAllCategories(req, res, next) {
     try {
       const data = await categoryModel.getAll();
-      res.status(200).json({
-        success: true,
-        data,
-      });
+      return res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);
     }
@@ -16,13 +12,8 @@ const categoryController = {
 
   async getCategoryById(req, res, next) {
     try {
-      const { id } = req.params;
-      const data = await categoryModel.getById(id);
-
-      res.status(200).json({
-        success: true,
-        data,
-      });
+      const data = await categoryModel.getById(req.params.id);
+      return res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);
     }
@@ -30,18 +21,19 @@ const categoryController = {
 
   async createCategory(req, res, next) {
     try {
-      const { name, description } = req.body;
+      const { name, slug } = req.body;
 
-      const payload = {
-        name,
-        slug: slugify(name),
-        description: description || null,
-      };
+      if (!name) {
+        return res.status(400).json({
+          success: false,
+          message: "Thiếu name",
+        });
+      }
 
-      const data = await categoryModel.create(payload);
-
-      res.status(201).json({
+      const data = await categoryModel.create({ name, slug });
+      return res.status(201).json({
         success: true,
+        message: "Tạo category thành công",
         data,
       });
     } catch (error) {
@@ -51,18 +43,10 @@ const categoryController = {
 
   async updateCategory(req, res, next) {
     try {
-      const { id } = req.params;
-      const { name, description } = req.body;
-
-      const payload = {
-        ...(name && { name, slug: slugify(name) }),
-        ...(description !== undefined && { description }),
-      };
-
-      const data = await categoryModel.update(id, payload);
-
-      res.status(200).json({
+      const data = await categoryModel.update(req.params.id, req.body);
+      return res.status(200).json({
         success: true,
+        message: "Cập nhật category thành công",
         data,
       });
     } catch (error) {
@@ -72,12 +56,10 @@ const categoryController = {
 
   async deleteCategory(req, res, next) {
     try {
-      const { id } = req.params;
-      const data = await categoryModel.delete(id);
-
-      res.status(200).json({
+      const data = await categoryModel.delete(req.params.id);
+      return res.status(200).json({
         success: true,
-        message: "Xóa danh mục thành công",
+        message: "Xóa category thành công",
         data,
       });
     } catch (error) {

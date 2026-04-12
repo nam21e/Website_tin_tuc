@@ -7,10 +7,10 @@ const categoryModel = {
     const { data, error } = await supabase
       .from(TABLE_NAME)
       .select("*")
-      .order("id", { ascending: true });
+      .order("id", { ascending: false });
 
-    if (error) throw error;
-    return data;
+    if (error) throw new Error(error.message);
+    return data || [];
   },
 
   async getById(id) {
@@ -20,30 +20,39 @@ const categoryModel = {
       .eq("id", id)
       .single();
 
-    if (error) throw error;
+    if (error) throw new Error(error.message);
     return data;
   },
 
   async create(payload) {
     const { data, error } = await supabase
       .from(TABLE_NAME)
-      .insert([payload])
+      .insert([
+        {
+          name: payload.name,
+          slug: payload.slug || null,
+        },
+      ])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) throw new Error(error.message);
     return data;
   },
 
   async update(id, payload) {
+    const updateData = {};
+    if (payload.name !== undefined) updateData.name = payload.name;
+    if (payload.slug !== undefined) updateData.slug = payload.slug;
+
     const { data, error } = await supabase
       .from(TABLE_NAME)
-      .update(payload)
+      .update(updateData)
       .eq("id", id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) throw new Error(error.message);
     return data;
   },
 
@@ -55,7 +64,7 @@ const categoryModel = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) throw new Error(error.message);
     return data;
   },
 };
