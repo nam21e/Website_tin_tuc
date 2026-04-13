@@ -37,4 +37,5 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server chay tai http://localhost:${PORT}`);
+  console.log("WEB-2 test");
 });
